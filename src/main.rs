@@ -7,7 +7,7 @@ fn main() {
 
     // Cria uma janela glfw
     let (mut window, events) = glfw
-        .create_window(300,300,"Uma janela",glfw::WindowMode::Windowed)
+        .create_window(800,600,"Uma janela",glfw::WindowMode::Windowed)
         .expect("Falha em criar uma janela glfw");
     window.make_current();
     window.set_key_polling(true);
@@ -21,7 +21,6 @@ fn main() {
     };
     // Muda a cor do fundo
     unsafe {gl.ClearColor(0.3,0.3,0.3,1.0);};
-    
     
     // define o vertex array object
     unsafe {
@@ -44,7 +43,7 @@ fn main() {
     // Define os vértices
     type Vertex = [f32;3];
     const VERTICES: [Vertex; 3]=
-        [[-0.5,-0.5,0.0],[0.5,-0.5,0.0],[0.0,5.0,0.0]];
+        [[-0.5,-0.5,0.0],[0.5,-0.5,0.0],[0.0,0.5,0.0]];
     
     // Envia nossos vértices pro array buffer
     unsafe {
@@ -61,7 +60,7 @@ fn main() {
             0, //GL_FALSE
             size_of::<Vertex>().try_into().unwrap(), //Isso passa a informação do tamanho do Vertex
                                                    //como um isize ao invés de um usize
-            0 as *const _,
+            std::ptr::null(),
         );
         gl.EnableVertexAttribArray(0);
 
@@ -168,21 +167,18 @@ fn main() {
     glfw.set_swap_interval(glfw::SwapInterval::Sync(1_u32));
     //loop até usuário fechar a janela
     while !window.should_close() {
-        unsafe {gl.Clear(GL_COLOR_BUFFER_BIT);
-                gl.DrawArrays(GL_TRIANGLES, 0, 3);        
-        }
-        window.swap_buffers();
-
         glfw.poll_events();
         for (_, event) in glfw::flush_messages(&events) {
             println!("{:?}",event);
-            match event{
-                glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
-                    window.set_should_close(true)
-                },
-                _ => {},
+            if let glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) = event {
+                window.set_should_close(true)
             }
         }
+        unsafe{
+        gl.Clear(GL_COLOR_BUFFER_BIT);
+        gl.DrawArrays(GL_TRIANGLES, 0, 3);
+        }
+        window.swap_buffers();
     }
 
 }
