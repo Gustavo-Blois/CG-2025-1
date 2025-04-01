@@ -1,6 +1,9 @@
 extern crate glfw;
 use glfw::{Action, Context, Key};
 use gl33::*;
+use std::ffi::{c_float,CString};
+mod cilindro;
+use cilindro::cria_cilindro;
 fn main() {
     use glfw::fail_on_errors;
     let mut glfw = glfw::init(fail_on_errors!()).unwrap();
@@ -19,58 +22,40 @@ fn main() {
         })
         .unwrap()
     };
-    // Muda a cor do fundo
-    unsafe {gl.ClearColor(0.3,0.3,0.3,1.0);};
-    
+   
     // define o vertex array object
     unsafe {
         let mut vao = 0;
         gl.GenVertexArrays(1, &mut vao);
         //o vertex array object não pode ser zero depois dessa operação
         assert_ne!(vao,0);
-    }
 
     //define o vertex buffer object
 
-    unsafe {
         let mut vbo = 0;
         gl.GenBuffers(1, &mut vbo);
         assert_ne!(vbo,0);
     // Vincula o vbo
         gl.BindBuffer(GL_ARRAY_BUFFER,vbo);
-    }
 
-    // Define os vértices
-    type Vertex = [f32;3];
-    const VERTICES: [Vertex; 3]=
-        [[-0.5,-0.5,0.0],[0.5,-0.5,0.0],[0.0,0.5,0.0]];
-    
+    // Vertices:
+    let vertices_cilindro = cria_cilindro(0.1,0.9);
+    let n_vertices_cilindro = vertices_cilindro.len();
     // Envia nossos vértices pro array buffer
-    unsafe {
         gl.BufferData(GL_ARRAY_BUFFER,
-            size_of_val(&VERTICES) as isize,
-            VERTICES.as_ptr().cast(),
-            GL_STATIC_DRAW,
+            size_of_val(&vertices_cilindro) as isize,
+            vertices_cilindro.as_ptr().cast(),
+            GL_DYNAMIC_DRAW,
         );
-    // Dados pro vertex attribute pointer
-        gl.VertexAttribPointer(
-            0,
-            3,
-            GL_FLOAT,
-            0, //GL_FALSE
-            size_of::<Vertex>().try_into().unwrap(), //Isso passa a informação do tamanho do Vertex
-                                                   //como um isize ao invés de um usize
-            std::ptr::null(),
-        );
-        gl.EnableVertexAttribArray(0);
 
     //Criação do vertex shader program object
         let vertex_shader = gl.CreateShader(GL_VERTEX_SHADER);
         assert_ne!(vertex_shader,0);
         const VERT_SHADER: &str = r#"#version 330 core
-        layout (location = 0) in vec3 pos;
+        attribute vec3 position;
+        uniform mat4 mat_transformation;
         void main() {
-        gl_Position = vec4(pos.x, pos.y, pos.z, 1.0);
+        gl_Position = vec4(position, 1.0);
         }"#;
     // envia o código fonte do shader para o nosso vspo
     
@@ -109,9 +94,9 @@ fn main() {
 
     const FRAG_SHADER: &str = r#"#version 330 core
     out vec4 final_color;
-
+    uniform vec4 color;
     void main(){
-        final_color = vec4(1.0,0.5,0.2,1.0);
+        gl_FragColor = color;
     }
         "#;
 
@@ -159,26 +144,55 @@ fn main() {
             panic!("Erro da linkagem dos shaders no programa: {}", String::from_utf8_lossy(&v));
         }
 
+            // Dados pro vertex attribute pointer
+        let loc = gl.GetAttribLocation(shader_program,CString::new("position").unwrap().as_ptr() as *const u8);
+        gl.EnableVertexAttribArray(loc.try_into().unwrap());
+        gl.VertexAttribPointer(loc.try_into().unwrap(),3,GL_FLOAT,0,size_of::<Vertex>().try_into().unwrap(),std::ptr::null(),);
+
     // Agora que os shaders foram linkados, podemos deletar eles
         gl.DeleteShader(vertex_shader);
         gl.DeleteShader(fragment_shader);
-        }
     // Vsync
     glfw.set_swap_interval(glfw::SwapInterval::Sync(1_u32));
+
+    // position
+
+    
+    // Muda a cor do fundo
+    gl.ClearColor(0.3,0.3,0.3,1.0);
+    
     //loop até usuário fechar a janela
     while !window.should_close() {
-        glfw.poll_events();
+            gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            let loc_color = gl.GetUniformLocation(shader_program,CString::new("color").unwrap().as_ptr() as *const u8);
+            let loc = gl.GetUniformLocation(shader_program,CString::new("position").unwrap().as_ptr() as *const u8);
+            gl.UniformMatrix4fv(loc,1,1,IDENTITY_MATRIX.to_matrix4fv());
+            for triangle in (0..vertices_cilindro.len()).step_by(3) {
+                gl.Uniform4f(loc_color.try_into().unwrap(),0.5,0.5,1.0,1.0);
+                gl.DrawArrays(GL_TRIANGLES,triangle.try_into().unwrap(),3);
+            }
+
         for (_, event) in glfw::flush_messages(&events) {
             println!("{:?}",event);
             if let glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) = event {
                 window.set_should_close(true)
             }
         }
-        unsafe{
-        gl.Clear(GL_COLOR_BUFFER_BIT);
-        gl.DrawArrays(GL_TRIANGLES, 0, 3);
-        }
         window.swap_buffers();
-    }
+        glfw.poll_events();
 
+    }
+    }
+}
+type Vertex = [f32;3];
+type V4Matrix = [[f32;4];4];
+const IDENTITY_MATRIX:V4Matrix = [[1.0,0.0,0.0,0.0], [0.0,1.0,0.0,0.0],[0.0,0.0,1.0,0.0],[0.0,0.0,0.0,1.0]];
+pub trait Matrix4fvTransformable {
+    fn to_matrix4fv(&self) -> *const c_float;
+}
+
+impl Matrix4fvTransformable for V4Matrix {
+    fn to_matrix4fv(&self) -> *const c_float {
+        self.as_ptr() as *const c_float
+    }
 }
