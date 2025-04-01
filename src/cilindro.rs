@@ -4,7 +4,7 @@ fn coordenada_cilindro(angulo:f32,altura:f32,raio:f32) -> [f32;3] {
     let x = raio*angulo.cos();
     let y = raio*angulo.sin();
     let z = altura;
-    return [x,y,z];
+    [x,y,z]
 }
 
 //Por padrão, os cilindros serão prismas de base 40
@@ -61,5 +61,5 @@ pub fn cria_cilindro(radius:f32,height:f32) -> Vec<[f32;3]> {
         }
         
     }
-    return vertices;
+    vertices
 }
