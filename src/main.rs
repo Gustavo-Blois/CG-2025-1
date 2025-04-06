@@ -4,7 +4,7 @@ use glfw::{Action, Context, Key};
 use rand::prelude::*;
 use std::ffi::{CString, c_float};
 mod cilindro;
-use cilindro::cria_cilindro;
+use cilindro::*;
 fn main() {
     use glfw::fail_on_errors;
     let mut glfw = glfw::init(fail_on_errors!()).unwrap();
@@ -40,7 +40,7 @@ fn main() {
         gl.BindBuffer(GL_ARRAY_BUFFER, vbo);
 
         // Vertices:
-        let vertices_cilindro = cria_cilindro(0.1, 0.9);
+        let vertices_cilindro = cria_halter(0.05, 0.2, 0.9);
         let n_vertices_cilindro = vertices_cilindro.len();
         // Envia nossos vértices pro array buffer
         gl.BufferData(
@@ -164,13 +164,13 @@ fn main() {
         // position
 
         // Muda a cor do fundo
-        gl.ClearColor(0.3, 0.3, 0.3, 1.0);
+        gl.ClearColor(0.7, 0.5, 0.3, 1.0);
 
         //Matriz de rotação
         //loop até usuário fechar a janela
         let mut radians = 0.0;
         while !window.should_close() {
-            radians += 10.0;
+            radians += 0.01;
             let mut rng = rand::rng();
             gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             let loc_color = gl.GetUniformLocation(
@@ -181,10 +181,9 @@ fn main() {
                 shader_program,
                 CString::new("mat_transformation").unwrap().as_ptr() as *const u8,
             );
-            let uma_matriz_rotacao_y = matriz_rotacao_y(radians * rng.random::<f32>());
             let matriz_transformacao = IDENTITY_MATRIX
-                .multiplication(&uma_matriz_rotacao_y)
-                .multiplication(&matriz_rotacao_x(radians * rng.random::<f32>()));
+                    .multiplication(&matriz_rotacao_x(45.0))
+                    .multiplication(&matriz_rotacao_y(45.0));
             gl.UniformMatrix4fv(
                 loc.try_into().unwrap(),
                 1,
@@ -198,7 +197,12 @@ fn main() {
             for triangle in (0..vertices_cilindro.len()).step_by(3) {
                 // println!("{:?}",triangle);
                 println!("{r},{g},{b}");
-                gl.Uniform4f(loc_color.try_into().unwrap(), r, g, b, 1.0);
+                if (triangle <= (vertices_cilindro.len()/5) + 310 || triangle >= (vertices_cilindro.len()*4/5) - 100){
+                    gl.Uniform4f(loc_color.try_into().unwrap(),0.2,0.2,0.2,1.0);
+                }
+                else{
+                    gl.Uniform4f(loc_color.try_into().unwrap(),0.4,0.4,0.4,1.0);
+                }
                 gl.DrawArrays(GL_TRIANGLES, triangle.try_into().unwrap(), 3);
             }
 
