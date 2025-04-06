@@ -100,7 +100,16 @@ fn main() {
 
         // Loop principal
         let mut radians = 0.0;
+        let mut poligon_mode = 0;
         while !window.should_close() {
+            
+            if poligon_mode == 0 {
+                gl.PolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+            } else {
+                gl.PolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+            }
+
+
             radians += 0.01;
             let rng = rand::rng();
             gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -128,13 +137,7 @@ fn main() {
 
             // Renderização dos triângulos
             for triangle in (0..vertices_cilindro.len()).step_by(3) {
-                if triangle <= (vertices_cilindro.len() / 5) + 310
-                    || triangle >= (vertices_cilindro.len() * 4 / 5) - 100
-                {
-                    gl.Uniform4f(loc_color.try_into().unwrap(), 0.4, 0.4, 0.4, 1.0);
-                } else {
-                    gl.Uniform4f(loc_color.try_into().unwrap(), 0.4, 0.4, 0.4, 1.0);
-                }
+                gl.Uniform4f(loc_color.try_into().unwrap(), 0.4, 0.4, 0.4, 1.0);
                 gl.DrawArrays(GL_TRIANGLES, triangle.try_into().unwrap(), 3);
             }
 
@@ -142,6 +145,9 @@ fn main() {
             for (_, event) in glfw::flush_messages(&events) {
                 if let glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) = event {
                     window.set_should_close(true)
+                }
+                if let glfw::WindowEvent::Key(Key::P, _, Action::Press, _) = event {
+                    poligon_mode = poligon_mode ^ 1;
                 }
             }
 
