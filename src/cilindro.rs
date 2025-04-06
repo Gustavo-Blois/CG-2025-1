@@ -89,10 +89,10 @@ pub fn cria_halter(raio_barra: f32, raio_peso: f32, height: f32) -> Vec<[f32; 3]
                     ((j as f32) + 1.0) * stack_step
                 }
             };
-            let mut p0:[f32;3];
-            let mut p1:[f32;3];
-            let mut p2:[f32;3];
-            let mut p3:[f32;3];
+            let p0:[f32;3];
+            let p1:[f32;3];
+            let p2:[f32;3];
+            let p3:[f32;3];
             if ((j as f32)*stack_step) <= (height/5.0) || ((j as f32)*stack_step) >= (height*4.0/5.0){ 
                 p0 = coordenada_cilindro(current_sector, current_stack, raio_peso);
                 p1 = coordenada_cilindro(current_sector, next_stack, raio_peso);
