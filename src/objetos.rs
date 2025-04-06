@@ -1,3 +1,4 @@
+use crate::alglin::*;
 const PI: f32 = 3.141592;
 
 fn coordenada_cilindro(angulo: f32, altura: f32, raio: f32) -> [f32; 3] {
@@ -7,10 +8,17 @@ fn coordenada_cilindro(angulo: f32, altura: f32, raio: f32) -> [f32; 3] {
     [x, y, z]
 }
 
-//Por padrão, os cilindros serão prismas de base 40
-pub fn cria_cilindro(radius: f32, height: f32) -> Vec<[f32; 3]> {
+fn coordenada_esfera(angulo_longitude: f32, angulo_latitude: f32, raio: f32) -> Vertex {
+    let x = raio * angulo_latitude.sin() * angulo_longitude.cos();
+    let y = raio * angulo_latitude.sin() * angulo_longitude.sin();
+    let z = raio * angulo_latitude.cos();
+    [x, y, z]
+}
+
+//Créditos: Prof. Jean Roberto Ponciano
+pub fn cria_prisma(radius: f32, height: f32, base: f32) -> Vec<[f32; 3]> {
     let mut vertices: Vec<[f32; 3]> = Vec::new();
-    let sector_count: f32 = 40.0;
+    let sector_count: f32 = base;
     let sector_step: f32 = 2.0 * PI / sector_count;
     let stack_count: f32 = 40.0;
     let stack_step: f32 = height / stack_count;
@@ -89,11 +97,13 @@ pub fn cria_halter(raio_barra: f32, raio_peso: f32, height: f32) -> Vec<[f32; 3]
                     ((j as f32) + 1.0) * stack_step
                 }
             };
-            let p0:[f32;3];
-            let p1:[f32;3];
-            let p2:[f32;3];
-            let p3:[f32;3];
-            if ((j as f32)*stack_step) <= (height/5.0) || ((j as f32)*stack_step) >= (height*4.0/5.0){ 
+            let p0: [f32; 3];
+            let p1: [f32; 3];
+            let p2: [f32; 3];
+            let p3: [f32; 3];
+            if ((j as f32) * stack_step) <= (height / 5.0)
+                || ((j as f32) * stack_step) >= (height * 4.0 / 5.0)
+            {
                 p0 = coordenada_cilindro(current_sector, current_stack, raio_peso);
                 p1 = coordenada_cilindro(current_sector, next_stack, raio_peso);
                 p2 = coordenada_cilindro(next_sector, current_stack, raio_peso);
@@ -103,7 +113,6 @@ pub fn cria_halter(raio_barra: f32, raio_peso: f32, height: f32) -> Vec<[f32; 3]
                 p1 = coordenada_cilindro(current_sector, next_stack, raio_barra);
                 p2 = coordenada_cilindro(next_sector, current_stack, raio_barra);
                 p3 = coordenada_cilindro(next_sector, next_stack, raio_barra);
-
             }
             vertices.push(p0);
             vertices.push(p2);
@@ -123,6 +132,48 @@ pub fn cria_halter(raio_barra: f32, raio_peso: f32, height: f32) -> Vec<[f32; 3]
                 vertices.push(p3);
                 vertices.push(coordenada_cilindro(0.0, next_stack, 0.0));
             }
+        }
+    }
+    vertices
+}
+
+// Creditos: Prof. Jean Roberto Ponciano
+pub fn cria_esfera(raio: f32) -> Vec<Vertex> {
+    let sectors: f32 = 40.0;
+    let stacks: f32 = 40.0;
+    let sector_step: f32 = 2.0 * PI / sectors;
+    let stack_step: f32 = PI / stacks;
+
+    let mut vertices: Vec<Vertex> = Vec::new();
+
+    for i in 0..=(sectors as i32) {
+        for j in 0..=(stacks as i32) {
+            let angulo_setor = (i as f32) * sector_step;
+            let angulo_stack = (j as f32) * stack_step;
+            let mut angulo_proximo_setor: f32 = 0.0;
+            if (i as f32) + 1.0 == sectors {
+                angulo_proximo_setor = PI * 2.0;
+            } else {
+                angulo_proximo_setor = ((i as f32) + 1.0) * sector_step;
+            }
+            let mut angulo_proxima_stack = 0.0;
+            if (angulo_proxima_stack as f32) + 1.0 == stacks {
+                angulo_proxima_stack = PI;
+            } else {
+                angulo_proxima_stack = ((j as f32) + 1.0) * stack_step;
+            }
+            let p0 = coordenada_esfera(angulo_setor, angulo_stack, raio);
+            let p1 = coordenada_esfera(angulo_setor, angulo_proxima_stack, raio);
+            let p2 = coordenada_esfera(angulo_proximo_setor, angulo_stack, raio);
+            let p3 = coordenada_esfera(angulo_proximo_setor, angulo_proxima_stack, raio);
+
+            vertices.push(p0);
+            vertices.push(p2);
+            vertices.push(p1);
+
+            vertices.push(p3);
+            vertices.push(p1);
+            vertices.push(p2);
         }
     }
     vertices

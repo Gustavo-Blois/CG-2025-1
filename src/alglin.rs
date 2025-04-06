@@ -1,5 +1,6 @@
 use std::ffi::c_float;
 pub type Vertex = [f32; 3];
+pub type Vertices = Vec<Vertex>;
 pub type V4Matrix = [[f32; 4]; 4];
 pub const IDENTITY_MATRIX: V4Matrix = [
     [1.0, 0.0, 0.0, 0.0],
@@ -7,11 +8,53 @@ pub const IDENTITY_MATRIX: V4Matrix = [
     [0.0, 0.0, 1.0, 0.0],
     [0.0, 0.0, 0.0, 1.0],
 ];
-pub trait Matrix4fvTransformable {
-    fn to_matrix4fv(&self) -> *const c_float;
+
+pub fn calcula_centroide(vertices: &Vec<Vertex>) -> Vertex {
+    let mut acumulador_x = 0.0;
+    let mut acumulador_y = 0.0;
+    let mut acumulador_z = 0.0;
+    let mut n_items = 0.0;
+    for vertice in vertices.iter() {
+        let [x, y, z] = vertice;
+        acumulador_x += x;
+        acumulador_y += y;
+        acumulador_z += z;
+
+        n_items += 1.0;
+    }
+    [
+        acumulador_x / n_items,
+        acumulador_y / n_items,
+        acumulador_z / n_items,
+    ]
+}
+
+pub trait VertexUtils {
+    fn matrix4fv_mul_vertex(&self, matrix: &V4Matrix) -> Self;
+}
+
+impl VertexUtils for Vertex {
+    fn matrix4fv_mul_vertex(&self, matrix: &V4Matrix) -> Vertex {
+        [
+            matrix[0][0] * self[0] + matrix[1][0] * self[1] + matrix[2][0] * self[2],
+            matrix[0][1] * self[0] + matrix[1][1] * self[1] + matrix[2][1] * self[2],
+            matrix[0][2] * self[0] + matrix[1][2] * self[1] + matrix[2][2] * self[2],
+        ]
+    }
+}
+
+impl VertexUtils for Vertices {
+    fn matrix4fv_mul_vertex(&self, matrix: &V4Matrix) -> Vertices {
+        let mut novos_vertices: Vertices = Vec::new();
+        for vertice in self.iter() {
+            novos_vertices.push(vertice.matrix4fv_mul_vertex(&matrix));
+        }
+        novos_vertices
+    }
 }
 
 pub trait V4MatrixUtils {
+    fn to_matrix4fv(&self) -> *const c_float;
     fn multiplication(&self, another_matrix: &V4Matrix) -> V4Matrix;
 }
 
@@ -29,6 +72,27 @@ impl V4MatrixUtils for V4Matrix {
         }
         return result;
     }
+    fn to_matrix4fv(&self) -> *const c_float {
+        self.as_ptr() as *const c_float
+    }
+}
+
+pub fn matriz_escala(sx: f32, sy: f32, sz: f32) -> V4Matrix {
+    [
+        [sx, 0.0, 0.0, 0.0],
+        [0.0, sy, 0.0, 0.0],
+        [0.0, 0.0, sz, 0.0],
+        [0.0, 0.0, 0.0, 1.0],
+    ]
+}
+
+pub fn matriz_translacao(tx: f32, ty: f32, tz: f32) -> V4Matrix {
+    [
+        [1.0, 0.0, 0.0, tx],
+        [0.0, 1.0, 0.0, ty],
+        [0.0, 0.0, 1.0, tz],
+        [0.0, 0.0, 0.0, 1.0],
+    ]
 }
 
 pub fn matriz_rotacao_x(angulo: f32) -> V4Matrix {
@@ -85,10 +149,4 @@ pub fn matriz_rotacao_z(angulo: f32) -> V4Matrix {
         [0.0, 0.0, 1.0, 0.0],
         [0.0, 0.0, 0.0, 1.0],
     ]
-}
-
-impl Matrix4fvTransformable for V4Matrix {
-    fn to_matrix4fv(&self) -> *const c_float {
-        self.as_ptr() as *const c_float
-    }
 }

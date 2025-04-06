@@ -2,12 +2,12 @@ extern crate glfw;
 use gl33::*;
 use glfw::{Action, Context, Key};
 use rand::prelude::*;
-use std::ffi::{CString};
+use std::ffi::CString;
 
 mod alglin;
 use alglin::*;
-mod cilindro;
-use cilindro::*;
+mod objetos;
+use objetos::*;
 
 const VERT_SHADER: &str = r#"#version 330 core
 attribute vec3 position;
@@ -24,13 +24,13 @@ void main(){
 
 fn main() {
     use glfw::fail_on_errors;
-    
+
     // Inicialização GLFW e janela
     let mut glfw = glfw::init(fail_on_errors!()).unwrap();
     let (mut window, events) = glfw
         .create_window(800, 600, "Uma janela", glfw::WindowMode::Windowed)
         .expect("Falha em criar uma janela glfw");
-    
+
     window.make_current();
     window.set_key_polling(true);
 
@@ -54,9 +54,9 @@ fn main() {
 
         // Configuração dos buffers
         gl.BindBuffer(GL_ARRAY_BUFFER, vbo);
-        let vertices_cilindro = cria_halter(0.05, 0.2, 0.9);
+        let vertices_cilindro = cria_prisma(0.2, 0.8, 4.0);
         let n_vertices_cilindro = vertices_cilindro.len();
-        
+
         gl.BufferData(
             GL_ARRAY_BUFFER,
             (vertices_cilindro.len() * std::mem::size_of::<[f32; 3]>()) as isize,
@@ -70,11 +70,11 @@ fn main() {
 
         // Criação do programa de shader
         let shader_program = create_shader_program(&gl, vertex_shader, fragment_shader);
-        
+
         // Configuração dos atributos de vértice
         gl.BindVertexArray(vao);
         gl.UseProgram(shader_program);
-        
+
         let loc = gl.GetAttribLocation(
             shader_program,
             CString::new("position").unwrap().as_ptr() as *const u8,
@@ -95,13 +95,14 @@ fn main() {
 
         // Configurações finais
         glfw.set_swap_interval(glfw::SwapInterval::Sync(1_u32));
+        gl.Enable(GL_DEPTH_TEST);
         gl.ClearColor(0.7, 0.5, 0.3, 1.0);
 
         // Loop principal
         let mut radians = 0.0;
         while !window.should_close() {
             radians += 0.01;
-            let mut rng = rand::rng();
+            let rng = rand::rng();
             gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             // Configuração das transformações
@@ -113,11 +114,11 @@ fn main() {
                 shader_program,
                 CString::new("mat_transformation").unwrap().as_ptr() as *const u8,
             );
-            
+
             let matriz_transformacao = IDENTITY_MATRIX
                 .multiplication(&matriz_rotacao_x(45.0))
                 .multiplication(&matriz_rotacao_y(45.0));
-            
+
             gl.UniformMatrix4fv(
                 loc.try_into().unwrap(),
                 1,
@@ -127,9 +128,10 @@ fn main() {
 
             // Renderização dos triângulos
             for triangle in (0..vertices_cilindro.len()).step_by(3) {
-                if triangle <= (vertices_cilindro.len()/5) + 310 || 
-                   triangle >= (vertices_cilindro.len()*4/5) - 100 {
-                    gl.Uniform4f(loc_color.try_into().unwrap(), 0.2, 0.2, 0.2, 1.0);
+                if triangle <= (vertices_cilindro.len() / 5) + 310
+                    || triangle >= (vertices_cilindro.len() * 4 / 5) - 100
+                {
+                    gl.Uniform4f(loc_color.try_into().unwrap(), 0.4, 0.4, 0.4, 1.0);
                 } else {
                     gl.Uniform4f(loc_color.try_into().unwrap(), 0.4, 0.4, 0.4, 1.0);
                 }
@@ -150,55 +152,56 @@ fn main() {
 }
 
 unsafe fn compile_shader(gl: &GlFns, shader_type: GLenum, source: &str) -> u32 {
-    unsafe{
-    let shader = gl.CreateShader(shader_type);
-    assert_ne!(shader, 0);
-    
-    gl.ShaderSource(
-        shader,
-        1, 
-        &(source.as_bytes().as_ptr().cast()),
-        &(source.len().try_into().unwrap()),
-    );
-    gl.CompileShader(shader);
+    unsafe {
+        let shader = gl.CreateShader(shader_type);
+        assert_ne!(shader, 0);
 
-    let mut success = 0;
-    gl.GetShaderiv(shader, GL_COMPILE_STATUS, &mut success);
-
-    if success == 0 {
-        let mut v: Vec<u8> = Vec::with_capacity(1024);
-        let mut log_len = 0_i32;
-        gl.GetShaderInfoLog(shader, 1024, &mut log_len, v.as_mut_ptr().cast());
-        v.set_len(log_len.try_into().unwrap());
-        panic!(
-            "Erro na compilação do shader: {:?}",
-            String::from_utf8_lossy(&v)
+        gl.ShaderSource(
+            shader,
+            1,
+            &(source.as_bytes().as_ptr().cast()),
+            &(source.len().try_into().unwrap()),
         );
-    }
-    
-    shader
+        gl.CompileShader(shader);
+
+        let mut success = 0;
+        gl.GetShaderiv(shader, GL_COMPILE_STATUS, &mut success);
+
+        if success == 0 {
+            let mut v: Vec<u8> = Vec::with_capacity(1024);
+            let mut log_len = 0_i32;
+            gl.GetShaderInfoLog(shader, 1024, &mut log_len, v.as_mut_ptr().cast());
+            v.set_len(log_len.try_into().unwrap());
+            panic!(
+                "Erro na compilação do shader: {:?}",
+                String::from_utf8_lossy(&v)
+            );
+        }
+
+        shader
     }
 }
 
 unsafe fn create_shader_program(gl: &GlFns, vertex_shader: u32, fragment_shader: u32) -> u32 {
-    unsafe{let program = gl.CreateProgram();
-    gl.AttachShader(program, vertex_shader);
-    gl.AttachShader(program, fragment_shader);
-    gl.LinkProgram(program);
+    unsafe {
+        let program = gl.CreateProgram();
+        gl.AttachShader(program, vertex_shader);
+        gl.AttachShader(program, fragment_shader);
+        gl.LinkProgram(program);
 
-    let mut success = 0;
-    gl.GetProgramiv(program, GL_LINK_STATUS, &mut success);
-    if success == 0 {
-        let mut v: Vec<u8> = Vec::with_capacity(1024);
-        let mut log_len = 0_i32;
-        gl.GetProgramInfoLog(program, 1024, &mut log_len, v.as_mut_ptr().cast());
-        v.set_len(log_len.try_into().unwrap());
-        panic!(
-            "Erro da linkagem dos shaders no programa: {}",
-            String::from_utf8_lossy(&v)
-        );
-    }
-    
-    program
+        let mut success = 0;
+        gl.GetProgramiv(program, GL_LINK_STATUS, &mut success);
+        if success == 0 {
+            let mut v: Vec<u8> = Vec::with_capacity(1024);
+            let mut log_len = 0_i32;
+            gl.GetProgramInfoLog(program, 1024, &mut log_len, v.as_mut_ptr().cast());
+            v.set_len(log_len.try_into().unwrap());
+            panic!(
+                "Erro da linkagem dos shaders no programa: {}",
+                String::from_utf8_lossy(&v)
+            );
+        }
+
+        program
     }
 }
