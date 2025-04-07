@@ -54,7 +54,9 @@ fn main() {
 
         // Configuração dos buffers
         gl.BindBuffer(GL_ARRAY_BUFFER, vbo);
-        let vertices_cilindro = cria_pulldown(1.0,0.05);
+        //let vertices_cilindro = cria_pulldown(1.0, 0.05);
+        let vertices_cilindro = cria_banco(1.0,0.2);
+
         let n_vertices_cilindro = vertices_cilindro.len();
 
         gl.BufferData(
@@ -99,19 +101,16 @@ fn main() {
         gl.ClearColor(0.7, 0.5, 0.3, 1.0);
 
         // Loop principal
-        let mut radians = 0.0;
         let mut poligon_mode = 0;
         while !window.should_close() {
-            
             if poligon_mode == 0 {
-                gl.PolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+                gl.PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             } else {
-                gl.PolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+                gl.PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             }
 
-
-            radians += 0.01;
-            let rng = rand::rng();
+            
+           
             gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             // Configuração das transformações
@@ -124,9 +123,7 @@ fn main() {
                 CString::new("mat_transformation").unwrap().as_ptr() as *const u8,
             );
 
-            let matriz_transformacao = IDENTITY_MATRIX
-                .multiplication(&matriz_rotacao_y(45.0))
-                .multiplication(&matriz_rotacao_x(90.0));
+            let matriz_transformacao = IDENTITY_MATRIX;
 
             gl.UniformMatrix4fv(
                 loc.try_into().unwrap(),

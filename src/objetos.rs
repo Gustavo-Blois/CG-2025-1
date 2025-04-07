@@ -71,19 +71,55 @@ pub fn cria_prisma(radius: f32, height: f32, base: f32) -> Vec<[f32; 3]> {
     vertices
 }
 
-pub fn cria_pulldown(comprimento:f32,raio:f32) -> Vertices{
-    let mut esquerda = cria_prisma(raio,comprimento/6.0,40.0);
-    esquerda = esquerda.matrix4fv_mul_vertex(&matriz_rotacao_x(-45.0));
-    let mut direita = cria_prisma(raio,comprimento/6.0,40.0);
-    direita = direita.matrix4fv_mul_vertex(&matriz_rotacao_x(45.0));
-    let mut centro = cria_prisma(raio, comprimento*4.0/6.0,40.0);
-    let [xc,yc,zc] = calcula_centroide(&centro);
-    println!("{xc},{yc},{zc}");
-    centro = centro.matrix4fv_mul_vertex(&matriz_translacao(-xc,-yc,-zc)).matrix4fv_mul_vertex(&matriz_rotacao_x(90.0));
-    esquerda.append(&mut centro);
-    esquerda.append(&mut direita);
-    esquerda
+pub fn cria_banco(altura:f32, largura:f32) -> Vertices {
+    let mut assento = cria_prisma(largura,altura/12.0,4.0);
+     assento = assento.matrix4fv_mul_vertex(&matriz_rotacao_y(90.0));
+    assento = assento.centraliza();
+    assento = assento.matrix4fv_mul_vertex(&matriz_rotacao_z(-90.0));
+    let mut pe_do_assento = cria_prisma(largura/6.0,altura/3.0,4.0);
+    pe_do_assento = pe_do_assento.matrix4fv_mul_vertex(&matriz_rotacao_x(90.0));
+    pe_do_assento = pe_do_assento.centraliza();
+    pe_do_assento = pe_do_assento.matrix4fv_mul_vertex(&matriz_translacao(-largura/2.0,-0.15,0.0));
+    let mut outro_pe = cria_prisma(largura/6.0,altura/3.0,4.0);
+    outro_pe = outro_pe.matrix4fv_mul_vertex(&matriz_rotacao_x(90.0));
+    outro_pe = outro_pe.centraliza();
+    outro_pe = outro_pe.matrix4fv_mul_vertex(&matriz_translacao(largura/2.0,-0.15,0.0));
+    assento.append(&mut pe_do_assento);
+    assento.append(&mut outro_pe);
+    assento
 }
+
+pub fn cria_pulldown(comprimento: f32, raio: f32) -> Vertices {
+    let mut centro = cria_prisma(raio, comprimento * 4.0 / 6.0, 40.0);
+    let mut esquerda = cria_prisma(raio,comprimento/6.0,40.0);
+    let mut direita = cria_prisma(raio,comprimento/6.0,40.0);
+    centro = centro.matrix4fv_mul_vertex(&matriz_rotacao_y(90.0));
+    centro = centro.centraliza();
+    esquerda = esquerda.matrix4fv_mul_vertex(&matriz_rotacao_y(90.0));
+    esquerda = esquerda.centraliza();
+    esquerda = esquerda.matrix4fv_mul_vertex(&matriz_rotacao_z(45.0));
+    esquerda = esquerda.matrix4fv_mul_vertex(&matriz_translacao(-comprimento/3.0,-raio,0.0));
+    centro.append(&mut esquerda);
+    direita = direita.matrix4fv_mul_vertex(&matriz_rotacao_y(90.0));
+    direita = direita.centraliza();
+    direita = direita.matrix4fv_mul_vertex(&matriz_rotacao_z(-45.0));
+    direita = direita.matrix4fv_mul_vertex(&matriz_translacao(comprimento/3.0,-raio,0.0));
+    centro.append(&mut direita);
+    centro
+
+}
+
+pub fn cria_pessoa(raio:f32, altura:f32) -> Vertices {
+    let mut tronco = cria_prisma(raio, altura,4.0);
+    tronco = tronco.matrix4fv_mul_vertex(&matriz_rotacao_y(90.0));
+    tronco = tronco.centraliza();
+    let mut cabeça = cria_esfera(raio*3.5/5.0);
+    cabeça = cabeça.centraliza();
+    cabeça = cabeça.matrix4fv_mul_vertex(&matriz_translacao(0.0,altura,0.0));
+    tronco.append(&mut cabeça);
+    tronco
+}
+
 pub fn cria_halter(raio_barra: f32, raio_peso: f32, height: f32) -> Vec<[f32; 3]> {
     let mut vertices: Vec<[f32; 3]> = Vec::new();
     let sector_count: f32 = 40.0;
@@ -149,6 +185,7 @@ pub fn cria_halter(raio_barra: f32, raio_peso: f32, height: f32) -> Vec<[f32; 3]
     }
     vertices
 }
+
 
 // Creditos: Prof. Jean Roberto Ponciano
 pub fn cria_esfera(raio: f32) -> Vec<Vertex> {
