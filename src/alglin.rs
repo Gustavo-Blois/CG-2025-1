@@ -37,7 +37,7 @@ pub trait VertexUtils {
 
 impl VertexUtils for Vertex {
     fn centraliza(&self) -> Vertex {
-        self.matrix4fv_mul_vertex(&matriz_translacao(-self[0],-self[1],-self[2]))
+        self.matrix4fv_mul_vertex(&matriz_translacao(-self[0], -self[1], -self[2]))
     }
     fn matrix4fv_mul_vertex(&self, matrix: &V4Matrix) -> Vertex {
         [
@@ -59,8 +59,8 @@ impl VertexUtils for Vertex {
 
 impl VertexUtils for Vertices {
     fn centraliza(&self) -> Vertices {
-        let [x,y,z] = calcula_centroide(self);
-        self.matrix4fv_mul_vertex(&matriz_translacao(-x,-y,-z))
+        let [x, y, z] = calcula_centroide(self);
+        self.matrix4fv_mul_vertex(&matriz_translacao(-x, -y, -z))
     }
     fn matrix4fv_mul_vertex(&self, matrix: &V4Matrix) -> Vertices {
         let mut novos_vertices: Vertices = Vec::new();
@@ -120,10 +120,9 @@ pub fn matriz_translacao(tx: f32, ty: f32, tz: f32) -> V4Matrix {
         [1.0, 0.0, 0.0, tx],
         [0.0, 1.0, 0.0, ty],
         [0.0, 0.0, 1.0, tz],
-        [0.0,0.0,0.0, 1.0],
+        [0.0, 0.0, 0.0, 1.0],
     ]
 }
-
 
 pub fn matriz_rotacao_x(angulo: f32) -> V4Matrix {
     [

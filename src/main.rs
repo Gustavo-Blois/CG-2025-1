@@ -55,9 +55,9 @@ fn main() {
         // Configuração dos buffers
         gl.BindBuffer(GL_ARRAY_BUFFER, vbo);
         //let vertices_cilindro = cria_pulldown(1.0, 0.05);
-        let vertices_cilindro = cria_banco(1.0,0.2);
-
-        let n_vertices_cilindro = vertices_cilindro.len();
+        //let vertices_cilindro = cria_pessoa(0.5,0.5);
+        //let vertices_cilindro = cria_banco(1.0,0.2);
+        let (n_vertices_cilindro,vertices_cilindro) = cria_pesos_do_pulldown(0.5, 0.5);
 
         gl.BufferData(
             GL_ARRAY_BUFFER,
@@ -109,8 +109,6 @@ fn main() {
                 gl.PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             }
 
-            
-           
             gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             // Configuração das transformações
