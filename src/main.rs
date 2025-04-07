@@ -54,7 +54,7 @@ fn main() {
 
         // Configuração dos buffers
         gl.BindBuffer(GL_ARRAY_BUFFER, vbo);
-        let vertices_cilindro = cria_prisma(0.2, 0.8, 4.0);
+        let vertices_cilindro = cria_pulldown(1.0,0.05);
         let n_vertices_cilindro = vertices_cilindro.len();
 
         gl.BufferData(
@@ -125,8 +125,8 @@ fn main() {
             );
 
             let matriz_transformacao = IDENTITY_MATRIX
-                .multiplication(&matriz_rotacao_x(45.0))
-                .multiplication(&matriz_rotacao_y(45.0));
+                .multiplication(&matriz_rotacao_y(45.0))
+                .multiplication(&matriz_rotacao_x(90.0));
 
             gl.UniformMatrix4fv(
                 loc.try_into().unwrap(),

@@ -36,9 +36,9 @@ pub trait VertexUtils {
 impl VertexUtils for Vertex {
     fn matrix4fv_mul_vertex(&self, matrix: &V4Matrix) -> Vertex {
         [
-            matrix[0][0] * self[0] + matrix[1][0] * self[1] + matrix[2][0] * self[2],
-            matrix[0][1] * self[0] + matrix[1][1] * self[1] + matrix[2][1] * self[2],
-            matrix[0][2] * self[0] + matrix[1][2] * self[1] + matrix[2][2] * self[2],
+            matrix[0][0] * self[0] + matrix[1][0] * self[1] + matrix[2][0] * self[2] + matrix[3][0]*1.0,
+            matrix[0][1] * self[0] + matrix[1][1] * self[1] + matrix[2][1] * self[2] + matrix[3][1]*1.0,
+            matrix[0][2] * self[0] + matrix[1][2] * self[1] + matrix[2][2] * self[2] + matrix[3][2]*1.0,
         ]
     }
 }
@@ -56,6 +56,7 @@ impl VertexUtils for Vertices {
 pub trait V4MatrixUtils {
     fn to_matrix4fv(&self) -> *const c_float;
     fn multiplication(&self, another_matrix: &V4Matrix) -> V4Matrix;
+    fn transpose(&self) -> V4Matrix;
 }
 
 impl V4MatrixUtils for V4Matrix {
@@ -75,6 +76,16 @@ impl V4MatrixUtils for V4Matrix {
     fn to_matrix4fv(&self) -> *const c_float {
         self.as_ptr() as *const c_float
     }
+
+    fn transpose(&self) -> V4Matrix {
+        let mut new_v4matrix:V4Matrix = [[0.0;4];4];
+        for i in 0..4 {
+            for j in 0..4 {
+                new_v4matrix[i][j] = self[j][i]
+            }
+        }
+        new_v4matrix
+    }
 }
 
 pub fn matriz_escala(sx: f32, sy: f32, sz: f32) -> V4Matrix {
@@ -92,7 +103,7 @@ pub fn matriz_translacao(tx: f32, ty: f32, tz: f32) -> V4Matrix {
         [0.0, 1.0, 0.0, ty],
         [0.0, 0.0, 1.0, tz],
         [0.0, 0.0, 0.0, 1.0],
-    ]
+    ].transpose()
 }
 
 pub fn matriz_rotacao_x(angulo: f32) -> V4Matrix {
@@ -111,7 +122,7 @@ pub fn matriz_rotacao_x(angulo: f32) -> V4Matrix {
             0.0,
         ],
         [0.0, 0.0, 0.0, 1.0],
-    ]
+    ].transpose()
 }
 
 pub fn matriz_rotacao_y(angulo: f32) -> V4Matrix {
@@ -130,7 +141,7 @@ pub fn matriz_rotacao_y(angulo: f32) -> V4Matrix {
             0.0,
         ],
         [0.0, 0.0, 0.0, 1.0],
-    ]
+    ].transpose()
 }
 pub fn matriz_rotacao_z(angulo: f32) -> V4Matrix {
     [
@@ -148,5 +159,5 @@ pub fn matriz_rotacao_z(angulo: f32) -> V4Matrix {
         ],
         [0.0, 0.0, 1.0, 0.0],
         [0.0, 0.0, 0.0, 1.0],
-    ]
+    ].transpose()
 }
