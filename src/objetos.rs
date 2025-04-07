@@ -16,7 +16,7 @@ fn coordenada_esfera(angulo_longitude: f32, angulo_latitude: f32, raio: f32) -> 
 }
 
 //Créditos: Prof. Jean Roberto Ponciano
-pub fn cria_prisma(radius: f32, height: f32, base: f32) -> Vertices{
+pub fn cria_prisma(radius: f32, height: f32, base: f32) -> Vertices {
     let mut vertices: Vec<[f32; 3]> = Vec::new();
     let sector_count: f32 = base;
     let sector_step: f32 = 2.0 * PI / sector_count;
@@ -87,16 +87,16 @@ pub fn cria_banco(altura: f32, largura: f32) -> Vertices {
     outro_pe = outro_pe.matrix4fv_mul_vertex(&matriz_translacao(largura / 2.0, -0.15, 0.0));
     assento.append(&mut pe_do_assento);
     assento.append(&mut outro_pe);
-    assento
+    assento.centraliza()
 }
 
-pub fn cria_pesos_do_pulldown(raio_peso: f32, height: f32) -> (usize,Vertices) {
+pub fn cria_pesos_do_pulldown(raio_peso: f32, height: f32) -> (usize, Vertices) {
     let mut pesos_de_cima = cria_pesos_do_pulldown_privado(raio_peso, height)
         .matrix4fv_mul_vertex(&matriz_rotacao_z(180.0));
     let pesos_de_cima_len = pesos_de_cima.len();
     let mut pesos_de_baixo = cria_pesos_do_pulldown_privado(raio_peso, height);
     pesos_de_cima.append(&mut pesos_de_baixo);
-    (pesos_de_cima_len,pesos_de_cima)
+    (pesos_de_cima_len, pesos_de_cima.centraliza())
 }
 
 fn cria_pesos_do_pulldown_privado(raio_peso: f32, height: f32) -> Vertices {
@@ -181,11 +181,11 @@ pub fn cria_pulldown(comprimento: f32, raio: f32) -> Vertices {
     direita = direita.matrix4fv_mul_vertex(&matriz_rotacao_z(-45.0));
     direita = direita.matrix4fv_mul_vertex(&matriz_translacao(comprimento / 3.0, -raio, 0.0));
     centro.append(&mut direita);
-    centro
+    centro.centraliza()
 }
 
 pub fn cria_tronco_e_cabeça(raio: f32, altura: f32) -> Vertices {
-    let mut tronco = cria_prisma(raio, altura, 4.0);
+    let mut tronco = cria_prisma(raio, altura, 40.0);
     tronco = tronco.matrix4fv_mul_vertex(&matriz_rotacao_y(90.0));
     tronco = tronco.centraliza();
     let mut cabeça = cria_esfera(raio * 3.5 / 5.0);
@@ -224,17 +224,24 @@ pub fn cria_braços(raio: f32, altura: f32, angulo: f32) -> Vertices {
     braço_esquerdo.append(&mut braço_direito);
     braço_esquerdo
 }
-pub fn cria_pessoa(raio: f32, altura: f32) -> (usize, Vertices) {
+pub fn cria_pessoa(raio: f32, altura: f32) -> (usize, usize, usize, Vertices) {
     let mut tronco_e_cabeça = cria_tronco_e_cabeça(raio, altura);
     let mut antebraços = cria_antebraços(raio / 2.0, altura / 2.0, 20.0);
     let mut braços = cria_braços(raio / 2.0, altura / 2.0, 20.0);
+    let braços_size = braços.len();
+    let antebraço_size = antebraços.len();
     antebraços.append(&mut braços);
-    let braços_offset = antebraços.len();
-    tronco_e_cabeça.append(&mut antebraços);
-    (braços_offset,tronco_e_cabeça.centraliza())
+    let tronco_e_cabeca_size = tronco_e_cabeça.len();
+    antebraços.append(&mut tronco_e_cabeça);
+    (
+        tronco_e_cabeca_size,
+        antebraço_size,
+        braços_size,
+        antebraços.centraliza(),
+    )
 }
 
-pub fn cria_halter(raio_barra: f32, raio_peso: f32, height: f32) -> (usize,usize,Vertices) {
+pub fn cria_halter(raio_barra: f32, raio_peso: f32, height: f32) -> (usize, usize, Vertices) {
     let mut vertices: Vec<[f32; 3]> = Vec::new();
     let sector_count: f32 = 40.0;
     let sector_step: f32 = 2.0 * PI / sector_count;
@@ -297,11 +304,15 @@ pub fn cria_halter(raio_barra: f32, raio_peso: f32, height: f32) -> (usize,usize
             }
         }
     }
-    ((height/5.0) as usize, (height *4.0/5.0) as usize,vertices)
+    (
+        (height / 5.0) as usize,
+        (height * 4.0 / 5.0) as usize,
+        vertices.centraliza(),
+    )
 }
 
 // Creditos: Prof. Jean Roberto Ponciano
-pub fn cria_esfera(raio: f32) -> Vec<Vertex> {
+pub fn cria_esfera(raio: f32) -> Vertices {
     let sectors: f32 = 40.0;
     let stacks: f32 = 40.0;
     let sector_step: f32 = 2.0 * PI / sectors;
