@@ -241,6 +241,76 @@ pub fn cria_pessoa(raio: f32, altura: f32) -> (usize, usize, usize, Vertices) {
     )
 }
 
+pub fn cria_pessoa2(comprimento: f32, altura: f32) -> (usize,Vertices) {
+    let mut tronco: Vertices = Vec::new();
+    let v1_tronco:Vertex = [-comprimento / 2.0, altura / 2.0, 0.0];
+    let v2_tronco: Vertex = [-comprimento / 2.0, -altura / 2.0, 0.0];
+    let v3_tronco: Vertex = [comprimento / 2.0, altura / 2.0, 0.0];
+    let v4_tronco: Vertex = [comprimento / 2.0, -altura / 2.0, 0.0];
+
+    tronco.push(v2_tronco);
+    tronco.push(v3_tronco);
+    tronco.push(v1_tronco);
+
+    tronco.push(v3_tronco);
+    tronco.push(v4_tronco);
+    tronco.push(v2_tronco);
+
+    let mut cabeca: Vertices = Vec::new();
+    let v1_cabeca:Vertex = [-(comprimento + 0.1) / 2.0, comprimento / 2.0, 0.0];
+    let v2_cabeca: Vertex = [-(comprimento+0.1) / 2.0, -comprimento / 2.0, 0.0];
+    let v3_cabeca: Vertex = [(comprimento+0.1) / 2.0, comprimento / 2.0, 0.0];
+    let v4_cabeca: Vertex = [(comprimento+0.1) / 2.0, -comprimento / 2.0, 0.0];
+
+    cabeca.push(v2_cabeca);
+    cabeca.push(v3_cabeca);
+    cabeca.push(v1_cabeca);
+
+    cabeca.push(v3_cabeca);
+    cabeca.push(v4_cabeca);
+    cabeca.push(v2_cabeca);
+    
+    cabeca = cabeca.matrix4fv_mul_vertex(&matriz_translacao(0.0,altura/2.0,0.0));
+
+    let mut braco: Vertices = Vec::new();
+    let v1_braco:Vertex = [-comprimento  / 6.0, altura/3.0, 0.0];
+    let v2_braco: Vertex = [-comprimento / 6.0, -altura/3.0, 0.0];
+    let v3_braco: Vertex = [comprimento / 6.0, altura/3.0, 0.0];
+    let v4_braco: Vertex = [comprimento / 6.0, -altura/3.0, 0.0];
+
+    braco.push(v2_braco);
+    braco.push(v3_braco);
+    braco.push(v1_braco);
+
+    braco.push(v3_braco);
+    braco.push(v4_braco);
+    braco.push(v2_braco);
+    
+    braco = braco.matrix4fv_mul_vertex(&matriz_rotacao_z(45.0)).matrix4fv_mul_vertex(&matriz_translacao(comprimento/4.0,altura/8.0,0.0));
+
+    let mut antebraco: Vertices = Vec::new();
+    let v1_antebraco:Vertex = [-comprimento  / 6.0, altura/4.0, 0.0];
+    let v2_antebraco: Vertex = [-comprimento / 6.0, -altura/4.0, 0.0];
+    let v3_antebraco: Vertex = [comprimento / 6.0, altura/4.0, 0.0];
+    let v4_antebraco: Vertex = [comprimento / 6.0, -altura/4.0, 0.0];
+
+    antebraco.push(v2_antebraco);
+    antebraco.push(v3_antebraco);
+    antebraco.push(v1_antebraco);
+
+    antebraco.push(v3_antebraco);
+    antebraco.push(v4_antebraco);
+    antebraco.push(v2_antebraco);
+    tamanho_antebraco = antebraco.len();
+    
+    antebraco = antebraco.matrix4fv_mul_vertex(&matriz_rotacao_z(-45.0)).matrix4fv_mul_vertex(&matriz_translacao(comprimento,altura/8.0,0.0));
+    antebraco.append(&mut tronco);
+    antebraco.append(&mut cabeca);
+    antebraco.append(&mut braco);
+
+    (tamanho_antebraco,antebraco)
+}
+
 pub fn cria_halter(raio_barra: f32, raio_peso: f32, height: f32) -> (usize, usize, Vertices) {
     let mut vertices: Vec<[f32; 3]> = Vec::new();
     let sector_count: f32 = 40.0;
