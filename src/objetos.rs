@@ -241,7 +241,7 @@ pub fn cria_pessoa(raio: f32, altura: f32) -> (usize, usize, usize, Vertices) {
     )
 }
 
-pub fn cria_pessoa2(comprimento: f32, altura: f32) -> (usize,Vertices) {
+pub fn cria_pessoa2(comprimento: f32, altura: f32) -> (Vertex,usize,Vertices) {
     let mut tronco: Vertices = Vec::new();
     let v1_tronco:Vertex = [-comprimento / 2.0, altura / 2.0, 0.0];
     let v2_tronco: Vertex = [-comprimento / 2.0, -altura / 2.0, 0.0];
@@ -301,17 +301,18 @@ pub fn cria_pessoa2(comprimento: f32, altura: f32) -> (usize,Vertices) {
     antebraco.push(v3_antebraco);
     antebraco.push(v4_antebraco);
     antebraco.push(v2_antebraco);
-    tamanho_antebraco = antebraco.len();
+    let tamanho_antebraco = antebraco.len();
+    let centroide_antebraco = calcula_centroide(&antebraco);
     
-    antebraco = antebraco.matrix4fv_mul_vertex(&matriz_rotacao_z(-45.0)).matrix4fv_mul_vertex(&matriz_translacao(comprimento,altura/8.0,0.0));
+    antebraco = antebraco.matrix4fv_mul_vertex(&matriz_rotacao_z(-90.0)).matrix4fv_mul_vertex(&matriz_translacao(comprimento*1.1,-0.1,0.0));
     antebraco.append(&mut tronco);
     antebraco.append(&mut cabeca);
     antebraco.append(&mut braco);
 
-    (tamanho_antebraco,antebraco)
+    (centroide_antebraco,tamanho_antebraco,antebraco)
 }
 
-pub fn cria_halter(raio_barra: f32, raio_peso: f32, height: f32) -> (usize, usize, Vertices) {
+pub fn cria_halter(raio_barra: f32, raio_peso: f32, height: f32) ->  Vertices {
     let mut vertices: Vec<[f32; 3]> = Vec::new();
     let sector_count: f32 = 40.0;
     let sector_step: f32 = 2.0 * PI / sector_count;
@@ -374,11 +375,7 @@ pub fn cria_halter(raio_barra: f32, raio_peso: f32, height: f32) -> (usize, usiz
             }
         }
     }
-    (
-        (height / 5.0) as usize,
-        (height * 4.0 / 5.0) as usize,
-        vertices.centraliza(),
-    )
+       vertices.centraliza()
 }
 
 // Creditos: Prof. Jean Roberto Ponciano
