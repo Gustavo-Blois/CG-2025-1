@@ -1,7 +1,6 @@
 extern crate glfw;
 use gl33::*;
 use glfw::{Action, Context, Key};
-use rand::prelude::*;
 use std::ffi::CString;
 
 mod alglin;
@@ -55,7 +54,7 @@ fn main() {
         gl.BindBuffer(GL_ARRAY_BUFFER, vbo);
 
         //Obtendo os vertices e informacoes relevantes de cada objeto
-        let  mut vertices_halter = cria_halter(0.03, 0.1, 0.4);
+        let mut vertices_halter = cria_halter(0.03, 0.1, 0.4);
         let n_vertices_halter = vertices_halter.len();
 
         let mut vertices_pulldown = cria_pulldown(1.0, 0.05);
@@ -68,7 +67,8 @@ fn main() {
             mut vertices_pessoa,
         ) = cria_pessoa(0.5, 0.5);
 
-        let (centroide_antebraco,n_vertices_antebraco_pessoa2,mut vertices_pessoa2) = cria_pessoa2(0.5, 1.0);
+        let (centroide_antebraco, n_vertices_antebraco_pessoa2, mut vertices_pessoa2) =
+            cria_pessoa2(0.5, 1.0);
         let n_vertices_pessoa2 = vertices_pessoa2.len();
 
         let mut vertices_banco = cria_banco(1.0, 0.2);
@@ -135,13 +135,13 @@ fn main() {
         // Configurações finais
         glfw.set_swap_interval(glfw::SwapInterval::Sync(1_u32));
         gl.Enable(GL_DEPTH_TEST);
-        gl.ClearColor(0.7, 0.9, 0.7, 1.0);
+        gl.ClearColor(0.749, 0.845, 1.0, 1.0);
 
         // Loop principal
         let mut poligon_mode = 0;
         let mut comando_pessoa1: i8 = 0;
         let mut comando_pessoa2: i8 = 8;
-        let mut comando_halter: i8 = 0;
+        let mut comando_halter: i8 = 1;
         while !window.should_close() {
             if poligon_mode == 0 {
                 gl.PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -185,10 +185,16 @@ fn main() {
                 n_vertices_pessoa2,
                 shader_program,
                 comando_pessoa2,
-                centroide_antebraco
+                centroide_antebraco,
             );
 
-            desenha_halter(&gl,inicio_halter,n_vertices_halter,shader_program,comando_halter);
+            desenha_halter(
+                &gl,
+                inicio_halter,
+                n_vertices_halter,
+                shader_program,
+                comando_halter,
+            );
 
             // eventos
             for (_, event) in glfw::flush_messages(&events) {
@@ -218,20 +224,16 @@ fn main() {
                         comando_pessoa2 -= 1;
                     }
                 }
-                                if let glfw::WindowEvent::Key(Key::X, _, Action::Press, _) = event {
+                if let glfw::WindowEvent::Key(Key::X, _, Action::Press, _) = event {
                     if comando_halter < 4 {
                         comando_halter += 1;
                     }
                 }
                 if let glfw::WindowEvent::Key(Key::N, _, Action::Press, _) = event {
-                    if comando_halter > 0 {
+                    if comando_halter > 1 {
                         comando_halter -= 1;
                     }
                 }
-
-
-
-
             }
 
             window.swap_buffers();
@@ -240,13 +242,7 @@ fn main() {
     }
 }
 
-unsafe fn desenha_halter(
-    gl: &GlFns,
-    start: usize,
-    size: usize,
-    shader_program: u32,
-    comando: i8,
-) {
+unsafe fn desenha_halter(gl: &GlFns, start: usize, size: usize, shader_program: u32, comando: i8) {
     unsafe {
         let loc = gl.GetUniformLocation(
             shader_program,
@@ -257,56 +253,84 @@ unsafe fn desenha_halter(
             shader_program,
             CString::new("color").unwrap().as_ptr() as *const u8,
         );
-        for i in (0..size).step_by(3){
-            if i < size/5 || i > size*4/5 {
-            let matriz_transformacao = IDENTITY_MATRIX.multiplication(&matriz_translacao(0.45,-0.8,0.0)).multiplication(&matriz_escala(comando as f32/2.0,comando as f32/2.0,comando as f32/2.0)).multiplication(&matriz_rotacao_y(45.0));
-            gl.UniformMatrix4fv(
-            loc.try_into().unwrap(),
-            1,
-            1,
-            matriz_transformacao.to_matrix4fv().try_into().unwrap(),
-            );
-            gl.Uniform4f(loc_color.try_into().unwrap(), 0.2, 0.2, 0.2, 1.0);
+        for i in (start..size).step_by(3) {
+            if i < size / 5 || i > size * 4 / 5 {
+                let matriz_transformacao = IDENTITY_MATRIX
+                    .multiplication(&matriz_translacao(0.45, -0.8, 0.5))
+                    .multiplication(&matriz_escala(
+                        comando as f32 / 2.0,
+                        comando as f32 / 2.0,
+                        comando as f32 / 2.0,
+                    ))
+                    .multiplication(&matriz_rotacao_y(45.0));
+                gl.UniformMatrix4fv(
+                    loc.try_into().unwrap(),
+                    1,
+                    1,
+                    matriz_transformacao.to_matrix4fv().try_into().unwrap(),
+                );
+                gl.Uniform4f(loc_color.try_into().unwrap(), 0.1568, 0.1568, 0.1568, 1.0);
 
-            gl.DrawArrays(
-            GL_TRIANGLES,
-            i.try_into().unwrap(),
-            3.try_into().unwrap(),
-            );
-
+                gl.DrawArrays(GL_TRIANGLES, i.try_into().unwrap(), 3.try_into().unwrap());
             } else {
-            let matriz_transformacao = IDENTITY_MATRIX.multiplication(&matriz_translacao(0.45,-0.8,0.0)).multiplication(&matriz_escala(comando as f32/2.0, comando as f32/2.0, comando as f32/2.0)).multiplication(&matriz_rotacao_y(45.0));
-            gl.UniformMatrix4fv(
-            loc.try_into().unwrap(),
-            1,
-            1,
-            matriz_transformacao.to_matrix4fv().try_into().unwrap(),
-            );
-            gl.Uniform4f(loc_color.try_into().unwrap(), 0.2, 0.2, 0.2, 1.0);
+                let matriz_transformacao = IDENTITY_MATRIX
+                    .multiplication(&matriz_translacao(0.45, -0.8, 0.5))
+                    .multiplication(&matriz_escala(
+                        comando as f32 / 2.0,
+                        comando as f32 / 2.0,
+                        comando as f32 / 2.0,
+                    ))
+                    .multiplication(&matriz_rotacao_y(45.0));
+                gl.UniformMatrix4fv(
+                    loc.try_into().unwrap(),
+                    1,
+                    1,
+                    matriz_transformacao.to_matrix4fv().try_into().unwrap(),
+                );
+                gl.Uniform4f(loc_color.try_into().unwrap(), 0.3294, 0.3098, 0.298, 1.0);
 
-            gl.DrawArrays(
-            GL_TRIANGLES,
-            i.try_into().unwrap(),
-            3.try_into().unwrap(),
-            );
-
-
+                gl.DrawArrays(GL_TRIANGLES, i.try_into().unwrap(), 3.try_into().unwrap());
             }
         }
-        let matriz_transformacao = IDENTITY_MATRIX;
     }
 }
 
-
-
-unsafe fn desenha_pessoa2(gl: &GlFns, start: usize,tamanho_antebraco:usize, size: usize, shader_program: u32, comando: i8, centroide_antebraco:Vertex){
-    unsafe{
-    let matriz_base = matriz_translacao(-0.750,-0.50,0.0);
-    desenha_antebraco_pessoa2(&gl,start,tamanho_antebraco,shader_program,comando,&matriz_base,centroide_antebraco);
-    desenha_corpo_pessoa2(&gl,start+tamanho_antebraco,size-tamanho_antebraco,shader_program,&matriz_base);
+unsafe fn desenha_pessoa2(
+    gl: &GlFns,
+    start: usize,
+    tamanho_antebraco: usize,
+    size: usize,
+    shader_program: u32,
+    comando: i8,
+    centroide_antebraco: Vertex,
+) {
+    unsafe {
+        let matriz_base = matriz_translacao(-0.750, -0.50, 0.0);
+        desenha_antebraco_pessoa2(
+            &gl,
+            start,
+            tamanho_antebraco,
+            shader_program,
+            comando,
+            &matriz_base,
+            centroide_antebraco,
+        );
+        desenha_corpo_pessoa2(
+            &gl,
+            start + tamanho_antebraco,
+            size - tamanho_antebraco,
+            shader_program,
+            &matriz_base,
+        );
     }
-    }
-unsafe fn desenha_corpo_pessoa2(gl: &GlFns, start: usize, size: usize, shader_program: u32,matriz_base:&V4Matrix) {
+}
+unsafe fn desenha_corpo_pessoa2(
+    gl: &GlFns,
+    start: usize,
+    size: usize,
+    shader_program: u32,
+    matriz_base: &V4Matrix,
+) {
     unsafe {
         let loc = gl.GetUniformLocation(
             shader_program,
@@ -324,13 +348,15 @@ unsafe fn desenha_corpo_pessoa2(gl: &GlFns, start: usize, size: usize, shader_pr
             1,
             matriz_transformacao.to_matrix4fv().try_into().unwrap(),
         );
-        gl.Uniform4f(loc_color.try_into().unwrap(), 0.2, 0.2, 0.2, 1.0);
 
-        gl.DrawArrays(
-            GL_TRIANGLES,
-            start.try_into().unwrap(),
-            size.try_into().unwrap(),
-        );
+        for i in (start..(start + size)).step_by(3) {
+            if i <= start + 3 {
+                gl.Uniform4f(loc_color.try_into().unwrap(), 0.0, 0.0, 0.0, 1.0);
+            } else {
+                gl.Uniform4f(loc_color.try_into().unwrap(), 0.4, 0.24, 0.20, 1.0);
+            }
+            gl.DrawArrays(GL_TRIANGLES, i.try_into().unwrap(), 3.try_into().unwrap());
+        }
     }
 }
 unsafe fn desenha_antebraco_pessoa2(
@@ -339,11 +365,11 @@ unsafe fn desenha_antebraco_pessoa2(
     size: usize,
     shader_program: u32,
     comando: i8,
-    matriz_base:&V4Matrix,
-    centroide_antebraco:Vertex
+    matriz_base: &V4Matrix,
+    centroide_antebraco: Vertex,
 ) {
     unsafe {
-        let [cx,cy,cz] = centroide_antebraco;
+        let [cx, cy, cz] = centroide_antebraco;
         let loc = gl.GetUniformLocation(
             shader_program,
             CString::new("mat_transformation").unwrap().as_ptr() as *const u8,
@@ -353,7 +379,16 @@ unsafe fn desenha_antebraco_pessoa2(
             shader_program,
             CString::new("color").unwrap().as_ptr() as *const u8,
         );
-        let matriz_transformacao = IDENTITY_MATRIX.multiplication(&matriz_base).multiplication(&matriz_translacao(-cx,-cy,-cz)).multiplication(&matriz_rotacao_z(((comando-8) as f32)*9.0)).multiplication(&matriz_translacao(cx,cy,cz)).multiplication(&matriz_translacao(-((comando - 8) as f32/32.0),-((comando - 8) as f32/64.0),0.0));
+        let matriz_transformacao = IDENTITY_MATRIX
+            .multiplication(&matriz_base)
+            .multiplication(&matriz_translacao(-cx, -cy, -cz))
+            .multiplication(&matriz_rotacao_z(((comando - 8) as f32) * 9.0))
+            .multiplication(&matriz_translacao(cx, cy, cz))
+            .multiplication(&matriz_translacao(
+                -((comando - 8) as f32 / 32.0),
+                -((comando - 8) as f32 / 64.0),
+                0.0,
+            ));
 
         gl.UniformMatrix4fv(
             loc.try_into().unwrap(),
@@ -361,7 +396,7 @@ unsafe fn desenha_antebraco_pessoa2(
             1,
             matriz_transformacao.to_matrix4fv().try_into().unwrap(),
         );
-        gl.Uniform4f(loc_color.try_into().unwrap(), 0.2, 0.2, 0.2, 1.0);
+        gl.Uniform4f(loc_color.try_into().unwrap(), 0.4, 0.24, 0.20, 1.0);
 
         gl.DrawArrays(
             GL_TRIANGLES,
@@ -370,8 +405,6 @@ unsafe fn desenha_antebraco_pessoa2(
         );
     }
 }
-
-
 
 unsafe fn desenha_pulldown(
     gl: &GlFns,
@@ -403,7 +436,7 @@ unsafe fn desenha_pulldown(
             1,
             matriz_transformacao.to_matrix4fv().try_into().unwrap(),
         );
-        gl.Uniform4f(loc_color.try_into().unwrap(), 0.2, 0.2, 0.2, 1.0);
+        gl.Uniform4f(loc_color.try_into().unwrap(), 0.3294, 0.3098, 0.298, 1.0);
 
         gl.DrawArrays(
             GL_TRIANGLES,
@@ -439,7 +472,7 @@ unsafe fn desenha_pesos_de_baixo(gl: &GlFns, start: usize, size: usize, shader_p
             CString::new("color").unwrap().as_ptr() as *const u8,
         );
         let matriz_transformacao = IDENTITY_MATRIX
-            .multiplication(&matriz_translacao(0.50, 0.0, 0.0))
+            .multiplication(&matriz_translacao(0.70, 0.0, 0.0))
             .multiplication(&matriz_escala(0.5, 0.50, 0.0));
         gl.UniformMatrix4fv(
             loc.try_into().unwrap(),
@@ -447,7 +480,7 @@ unsafe fn desenha_pesos_de_baixo(gl: &GlFns, start: usize, size: usize, shader_p
             1,
             matriz_transformacao.to_matrix4fv().try_into().unwrap(),
         );
-        gl.Uniform4f(loc_color.try_into().unwrap(), 0.2, 0.2, 0.2, 1.0);
+        gl.Uniform4f(loc_color.try_into().unwrap(), 0.1568, 0.1568, 0.1568, 1.0);
 
         gl.DrawArrays(
             GL_TRIANGLES,
@@ -475,7 +508,7 @@ unsafe fn desenha_pesos_de_cima(
             CString::new("color").unwrap().as_ptr() as *const u8,
         );
         let matriz_transformacao = IDENTITY_MATRIX
-            .multiplication(&matriz_translacao(0.5, -((comando as f32) / 16.0), 0.0))
+            .multiplication(&matriz_translacao(0.7, -((comando as f32) / 16.0), 0.0))
             .multiplication(&matriz_escala(0.5, 0.50, 0.0));
         gl.UniformMatrix4fv(
             loc.try_into().unwrap(),
@@ -483,7 +516,7 @@ unsafe fn desenha_pesos_de_cima(
             1,
             matriz_transformacao.to_matrix4fv().try_into().unwrap(),
         );
-        gl.Uniform4f(loc_color.try_into().unwrap(), 0.2, 0.2, 0.2, 1.0);
+        gl.Uniform4f(loc_color.try_into().unwrap(), 0.1568, 0.1568, 0.1568, 1.0);
 
         gl.DrawArrays(
             GL_TRIANGLES,
@@ -513,7 +546,7 @@ unsafe fn desenha_banco(gl: &GlFns, start: usize, size: usize, shader_program: u
             1,
             matriz_transformacao.to_matrix4fv().try_into().unwrap(),
         );
-        gl.Uniform4f(loc_color.try_into().unwrap(), 0.2, 0.2, 0.2, 1.0);
+        gl.Uniform4f(loc_color.try_into().unwrap(), 0.1568, 0.1568, 0.1568, 1.0);
 
         gl.DrawArrays(
             GL_TRIANGLES,
@@ -577,7 +610,7 @@ unsafe fn desenha_tronco_e_cabeca(
             1,
             matriz_transformacao.to_matrix4fv().try_into().unwrap(),
         );
-        gl.Uniform4f(loc_color.try_into().unwrap(), 0.35, 0.24, 0.20, 1.0);
+        gl.Uniform4f(loc_color.try_into().unwrap(), 1.0, 1.0, 1.0, 1.0);
 
         gl.DrawArrays(
             GL_TRIANGLES,
@@ -634,7 +667,7 @@ unsafe fn desenha_braco(
         );
         let matriz_transformacao = IDENTITY_MATRIX
             .multiplication(&matriz_base)
-            .multiplication(&matriz_translacao(0.0, (comando as f32) / 8.0, 0.0));
+            .multiplication(&matriz_translacao(0.0, (comando as f32) / 8.0, 0.5));
 
         gl.UniformMatrix4fv(
             loc.try_into().unwrap(),
@@ -671,7 +704,7 @@ unsafe fn desenha_antebraco(
         );
         let matriz_transformacao = IDENTITY_MATRIX
             .multiplication(&matriz_base)
-            .multiplication(&matriz_translacao(0.0, (comando as f32) / 8.0, 0.0));
+            .multiplication(&matriz_translacao(0.0, (comando as f32) / 8.0, 0.5));
 
         gl.UniformMatrix4fv(
             loc.try_into().unwrap(),

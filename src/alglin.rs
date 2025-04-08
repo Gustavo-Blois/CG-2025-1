@@ -74,6 +74,7 @@ impl VertexUtils for Vertices {
 pub trait V4MatrixUtils {
     fn to_matrix4fv(&self) -> *const c_float;
     fn multiplication(&self, another_matrix: &V4Matrix) -> V4Matrix;
+    #[allow(dead_code)]
     fn transpose(&self) -> V4Matrix;
 }
 
