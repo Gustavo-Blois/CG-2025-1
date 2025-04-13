@@ -1,4 +1,10 @@
 # Funcionamento
+
+Rode o projeto usando
+```
+$ cargo run
+```
+
 Este projeto apresenta 5 tipos diferentes de objetos, tentando criar uma cena de academia:
 halter(3d);
 peso do aparelho de costas (lat pulldown)(3d);
