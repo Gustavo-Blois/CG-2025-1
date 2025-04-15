@@ -7,6 +7,8 @@ mod alglin;
 use alglin::*;
 mod objetos;
 use objetos::*;
+mod mvp;
+use mvp::*;
 
 const VERT_SHADER: &str = r#"#version 330 core
 attribute vec3 position;
@@ -256,13 +258,13 @@ unsafe fn desenha_halter(gl: &GlFns, start: usize, size: usize, shader_program: 
         for i in (start..size).step_by(3) {
             if i < size / 5 || i > size * 4 / 5 {
                 let matriz_transformacao = IDENTITY_MATRIX
-                    .multiplication(&matriz_translacao(0.45, -0.8, 0.5))
-                    .multiplication(&matriz_escala(
+                    .multiply(&matriz_translacao(0.45, -0.8, 0.5))
+                    .multiply(&matriz_escala(
                         comando as f32 / 2.0,
                         comando as f32 / 2.0,
                         comando as f32 / 2.0,
                     ))
-                    .multiplication(&matriz_rotacao_y(45.0));
+                    .multiply(&matriz_rotacao_y(45.0));
                 gl.UniformMatrix4fv(
                     loc.try_into().unwrap(),
                     1,
@@ -274,13 +276,13 @@ unsafe fn desenha_halter(gl: &GlFns, start: usize, size: usize, shader_program: 
                 gl.DrawArrays(GL_TRIANGLES, i.try_into().unwrap(), 3.try_into().unwrap());
             } else {
                 let matriz_transformacao = IDENTITY_MATRIX
-                    .multiplication(&matriz_translacao(0.45, -0.8, 0.5))
-                    .multiplication(&matriz_escala(
+                    .multiply(&matriz_translacao(0.45, -0.8, 0.5))
+                    .multiply(&matriz_escala(
                         comando as f32 / 2.0,
                         comando as f32 / 2.0,
                         comando as f32 / 2.0,
                     ))
-                    .multiplication(&matriz_rotacao_y(45.0));
+                    .multiply(&matriz_rotacao_y(45.0));
                 gl.UniformMatrix4fv(
                     loc.try_into().unwrap(),
                     1,
@@ -341,7 +343,7 @@ unsafe fn desenha_corpo_pessoa2(
             shader_program,
             CString::new("color").unwrap().as_ptr() as *const u8,
         );
-        let matriz_transformacao = IDENTITY_MATRIX.multiplication(&matriz_base);
+        let matriz_transformacao = IDENTITY_MATRIX.multiply(&matriz_base);
         gl.UniformMatrix4fv(
             loc.try_into().unwrap(),
             1,
@@ -380,11 +382,11 @@ unsafe fn desenha_antebraco_pessoa2(
             CString::new("color").unwrap().as_ptr() as *const u8,
         );
         let matriz_transformacao = IDENTITY_MATRIX
-            .multiplication(&matriz_base)
-            .multiplication(&matriz_translacao(-cx, -cy, -cz))
-            .multiplication(&matriz_rotacao_z(((comando - 8) as f32) * 9.0))
-            .multiplication(&matriz_translacao(cx, cy, cz))
-            .multiplication(&matriz_translacao(
+            .multiply(&matriz_base)
+            .multiply(&matriz_translacao(-cx, -cy, -cz))
+            .multiply(&matriz_rotacao_z(((comando - 8) as f32) * 9.0))
+            .multiply(&matriz_translacao(cx, cy, cz))
+            .multiply(&matriz_translacao(
                 -((comando - 8) as f32 / 32.0),
                 -((comando - 8) as f32 / 64.0),
                 0.0,
@@ -424,8 +426,8 @@ unsafe fn desenha_pulldown(
             CString::new("color").unwrap().as_ptr() as *const u8,
         );
         let matriz_transformacao = IDENTITY_MATRIX
-            .multiplication(&matriz_escala(1.0, 0.650, 0.0))
-            .multiplication(&matriz_translacao(
+            .multiply(&matriz_escala(1.0, 0.650, 0.0))
+            .multiply(&matriz_translacao(
                 0.25,
                 0.7 + ((comando as f32) / 8.0),
                 0.0,
@@ -472,8 +474,8 @@ unsafe fn desenha_pesos_de_baixo(gl: &GlFns, start: usize, size: usize, shader_p
             CString::new("color").unwrap().as_ptr() as *const u8,
         );
         let matriz_transformacao = IDENTITY_MATRIX
-            .multiplication(&matriz_translacao(0.70, 0.0, 0.0))
-            .multiplication(&matriz_escala(0.5, 0.50, 0.0));
+            .multiply(&matriz_translacao(0.70, 0.0, 0.0))
+            .multiply(&matriz_escala(0.5, 0.50, 0.0));
         gl.UniformMatrix4fv(
             loc.try_into().unwrap(),
             1,
@@ -508,8 +510,8 @@ unsafe fn desenha_pesos_de_cima(
             CString::new("color").unwrap().as_ptr() as *const u8,
         );
         let matriz_transformacao = IDENTITY_MATRIX
-            .multiplication(&matriz_translacao(0.7, -((comando as f32) / 16.0), 0.0))
-            .multiplication(&matriz_escala(0.5, 0.50, 0.0));
+            .multiply(&matriz_translacao(0.7, -((comando as f32) / 16.0), 0.0))
+            .multiply(&matriz_escala(0.5, 0.50, 0.0));
         gl.UniformMatrix4fv(
             loc.try_into().unwrap(),
             1,
@@ -538,8 +540,8 @@ unsafe fn desenha_banco(gl: &GlFns, start: usize, size: usize, shader_program: u
             CString::new("color").unwrap().as_ptr() as *const u8,
         );
         let matriz_transformacao = IDENTITY_MATRIX
-            .multiplication(&matriz_translacao(0.25, -0.5, 0.0))
-            .multiplication(&matriz_rotacao_y(90.0));
+            .multiply(&matriz_translacao(0.25, -0.5, 0.0))
+            .multiply(&matriz_rotacao_y(90.0));
         gl.UniformMatrix4fv(
             loc.try_into().unwrap(),
             1,
@@ -566,8 +568,7 @@ unsafe fn desenha_pessoa1(
     comando: i8,
 ) {
     unsafe {
-        let matriz_base =
-            matriz_escala(0.5, 0.5, 0.5).multiplication(&matriz_translacao(0.5, 0.5, 0.0));
+        let matriz_base = matriz_escala(0.5, 0.5, 0.5).multiply(&matriz_translacao(0.5, 0.5, 0.0));
         desenha_bracos(
             &gl,
             start,
@@ -603,7 +604,7 @@ unsafe fn desenha_tronco_e_cabeca(
             shader_program,
             CString::new("color").unwrap().as_ptr() as *const u8,
         );
-        let matriz_transformacao = IDENTITY_MATRIX.multiplication(&matriz_base);
+        let matriz_transformacao = IDENTITY_MATRIX.multiply(&matriz_base);
         gl.UniformMatrix4fv(
             loc.try_into().unwrap(),
             1,
@@ -666,8 +667,8 @@ unsafe fn desenha_braco(
             CString::new("color").unwrap().as_ptr() as *const u8,
         );
         let matriz_transformacao = IDENTITY_MATRIX
-            .multiplication(&matriz_base)
-            .multiplication(&matriz_translacao(0.0, (comando as f32) / 8.0, 0.5));
+            .multiply(&matriz_base)
+            .multiply(&matriz_translacao(0.0, (comando as f32) / 8.0, 0.5));
 
         gl.UniformMatrix4fv(
             loc.try_into().unwrap(),
@@ -703,8 +704,8 @@ unsafe fn desenha_antebraco(
             CString::new("color").unwrap().as_ptr() as *const u8,
         );
         let matriz_transformacao = IDENTITY_MATRIX
-            .multiplication(&matriz_base)
-            .multiplication(&matriz_translacao(0.0, (comando as f32) / 8.0, 0.5));
+            .multiply(&matriz_base)
+            .multiply(&matriz_translacao(0.0, (comando as f32) / 8.0, 0.5));
 
         gl.UniformMatrix4fv(
             loc.try_into().unwrap(),

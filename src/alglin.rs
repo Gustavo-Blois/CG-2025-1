@@ -73,13 +73,13 @@ impl VertexUtils for Vertices {
 
 pub trait V4MatrixUtils {
     fn to_matrix4fv(&self) -> *const c_float;
-    fn multiplication(&self, another_matrix: &V4Matrix) -> V4Matrix;
+    fn multiply(&self, another_matrix: &V4Matrix) -> V4Matrix;
     #[allow(dead_code)]
     fn transpose(&self) -> V4Matrix;
 }
 
 impl V4MatrixUtils for V4Matrix {
-    fn multiplication(&self, another_matrix: &V4Matrix) -> V4Matrix {
+    fn multiply(&self, another_matrix: &V4Matrix) -> V4Matrix {
         let mut result: V4Matrix = [[0.0; 4]; 4];
         for i in 0..4 {
             for j in 0..4 {
@@ -121,6 +121,31 @@ pub fn matriz_translacao(tx: f32, ty: f32, tz: f32) -> V4Matrix {
         [1.0, 0.0, 0.0, tx],
         [0.0, 1.0, 0.0, ty],
         [0.0, 0.0, 1.0, tz],
+        [0.0, 0.0, 0.0, 1.0],
+    ]
+}
+
+fn normalize(vertice: Vertex) -> Vertex {
+    let [a, b, c] = vertice;
+    let produto_vetorial = a * a + b * b + c * c;
+    let inverso_produto_vetorial = 1.0 / (produto_vetorial.sqrt());
+    let a2 = a * inverso_produto_vetorial;
+    let b2 = b * inverso_produto_vetorial;
+    let c2 = c * inverso_produto_vetorial;
+    [a2, b2, c2]
+}
+
+pub fn matriz_rotacao(angulo: f32, eixo: Vertex) -> V4Matrix {
+    let (sin, cos) = angulo.sin_cos();
+    let [x, y, z] = normalize(eixo);
+    let a = x * (1.0 - cos);
+    let b = x * (1.0 - cos);
+    let c = x * (1.0 - cos);
+
+    [
+        [cos + a * x, a * y + sin * z, a * z - sin * y, 0.0],
+        [b * x - sin * z, cos + b * y, b * z + sin * x, 0.0],
+        [c * x + sin * y, c * y - sin * x, cos + c * z, 0.0],
         [0.0, 0.0, 0.0, 1.0],
     ]
 }
