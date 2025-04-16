@@ -125,7 +125,11 @@ pub fn matriz_translacao(tx: f32, ty: f32, tz: f32) -> V4Matrix {
     ]
 }
 
-fn normalize(vertice: Vertex) -> Vertex {
+pub fn produto_vetorial(a:Vertex,b:Vertex) -> Vertex {
+    [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1] - a[1]*b[0]]
+}
+
+pub fn normalize(vertice: Vertex) -> Vertex {
     let [a, b, c] = vertice;
     let produto_vetorial = a * a + b * b + c * c;
     let inverso_produto_vetorial = 1.0 / (produto_vetorial.sqrt());

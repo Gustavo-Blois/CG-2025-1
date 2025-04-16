@@ -6,6 +6,17 @@ struct Camera {
     camera_up: Vertex,
 }
 
+
+impl Camera {
+    fn new() -> Self{
+        Self {
+            camera_pos: [0.0,0.0,3.0],
+            camera_front: [0.0,0.0,-1.0],
+            camera_up: [0.0,1.0,0.0],
+        }
+    }
+}
+
 fn model(
     angle: f32,
     r_x: f32,
@@ -30,6 +41,27 @@ fn model(
     matriz_transformacao
 }
 
-fn view(camera: Camera) -> V4Matrix {}
+fn view(camera: Camera) -> V4Matrix {
+   let [px, py, pz] = camera.camera_pos;
+   let matriz_translacao = matriz_translacao(-px, -py, -pz);
+   let [lx,ly,lz] = camera.camera_front;
+   let [upx, upy, upz] = camera.camera_up;
+   let [izc,jzc,kzc] = normalize([px-lx,py-ly,pz-lz]);
+   let [ixc,jxc,kxc] = normalize(produto_vetorial(camera.camera_up,[izc,jzc,kzc]));
+   let [iyc,jyc,kyc] = produto_vetorial([izc,jzc,kzc],[ixc,jxc,kxc]);
+   let matriz_rotacao = [
+       [ixc,jxc,kxc,0.0],
+       [iyc,jyc,kyc,0.0],
+       [izc,jzc,kzc,0.0],
+       [0.0,0.0,0.0,1.0],
+   ];
+   let matriz_view = matriz_rotacao.multiply(&matriz_translacao);
+   matriz_view
+}
 
-fn projection() -> V4Matrix {}
+
+fn projection(fov:f32,aspect:f32,near:f32,far:f32) -> V4Matrix {
+    
+
+
+}
