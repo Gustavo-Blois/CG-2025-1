@@ -147,8 +147,8 @@ pub fn matriz_rotacao(angulo: f32, eixo: Vertex) -> V4Matrix {
     let (sin, cos) = angulo.sin_cos();
     let [x, y, z] = normalize(eixo);
     let a = x * (1.0 - cos);
-    let b = x * (1.0 - cos);
-    let c = x * (1.0 - cos);
+    let b = y * (1.0 - cos);
+    let c = z * (1.0 - cos);
 
     [
         [cos + a * x, a * y + sin * z, a * z - sin * y, 0.0],

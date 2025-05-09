@@ -1,13 +1,13 @@
 use crate::alglin::*;
 
-struct Camera {
+pub struct Camera {
     camera_pos: Vertex,
     camera_front: Vertex,
     camera_up: Vertex,
 }
 
 impl Camera {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             camera_pos: [0.0, 0.0, 3.0],
             camera_front: [0.0, 0.0, -1.0],
@@ -16,7 +16,7 @@ impl Camera {
     }
 }
 
-fn model(
+pub fn model(
     angle: f32,
     r_x: f32,
     r_y: f32,
@@ -40,11 +40,11 @@ fn model(
     matriz_transformacao
 }
 
-fn view(camera: Camera) -> V4Matrix {
+pub fn view(camera: Camera) -> V4Matrix {
     let [px, py, pz] = camera.camera_pos;
     let matriz_translacao = matriz_translacao(-px, -py, -pz);
     let [lx, ly, lz] = camera.camera_front;
-    let [izc, jzc, kzc] = normalize([px - lx, py - ly, pz - lz]);
+    let [izc, jzc, kzc] = normalize([(px - lx), (py - ly), (pz - lz)]);
     let [ixc, jxc, kxc] = normalize(produto_vetorial(camera.camera_up, [izc, jzc, kzc]));
     let [iyc, jyc, kyc] = produto_vetorial([izc, jzc, kzc], [ixc, jxc, kxc]);
     let matriz_rotacao = [
@@ -57,25 +57,25 @@ fn view(camera: Camera) -> V4Matrix {
     matriz_view
 }
 
-fn projection(near: f32, far: f32, top: f32, bottom: f32, right: f32, left: f32) -> V4Matrix {
+pub fn projection(near: f32, far: f32, top: f32, bottom: f32, right: f32, left: f32) -> V4Matrix {
     [
         [
-            2.0 * near / right - left,
+            2.0 * near / (right - left),
             0.0,
-            right + left / right - left,
-            0.0,
-        ],
-        [
-            0.0,
-            2.0 * near / top - bottom,
-            top + bottom / top - bottom,
+            (right + left) / (right - left),
             0.0,
         ],
         [
             0.0,
+            (2.0 * near) / (top - bottom),
+            (top + bottom) / (top - bottom),
             0.0,
-            (-1.0 * (far + near)) / far - near,
-            (-2.0 * far * near) / far - near,
+        ],
+        [
+            0.0,
+            0.0,
+            (-1.0 * (far + near)) / (far - near),
+            (-2.0 * far * near) / (far - near),
         ],
         [0.0, 0.0, -1.0, 0.0],
     ]

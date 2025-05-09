@@ -1,3 +1,4 @@
+use gl33::global_loader::*;
 use gl33::*;
 use std::{env, fs, path::PathBuf};
 
@@ -15,7 +16,7 @@ pub fn get_fragment_shader() -> String {
     .expect("arquivo não encontrado")
 }
 
-pub unsafe fn compile_shader(gl: &GlFns, shader_type: GLenum) -> u32 {
+pub unsafe fn compile_shader(shader_type: GLenum) -> u32 {
     unsafe {
         let source: String;
         if shader_type == GL_VERTEX_SHADER {
@@ -25,24 +26,24 @@ pub unsafe fn compile_shader(gl: &GlFns, shader_type: GLenum) -> u32 {
         } else {
             panic!("source está vazia")
         }
-        let shader = gl.CreateShader(shader_type);
+        let shader = glCreateShader(shader_type);
         assert_ne!(shader, 0);
 
-        gl.ShaderSource(
+        glShaderSource(
             shader,
             1,
             &(source.as_bytes().as_ptr().cast()),
             &(source.len().try_into().unwrap()),
         );
-        gl.CompileShader(shader);
+        glCompileShader(shader);
 
         let mut success = 0;
-        gl.GetShaderiv(shader, GL_COMPILE_STATUS, &mut success);
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &mut success);
 
         if success == 0 {
             let mut v: Vec<u8> = Vec::with_capacity(1024);
             let mut log_len = 0_i32;
-            gl.GetShaderInfoLog(shader, 1024, &mut log_len, v.as_mut_ptr().cast());
+            glGetShaderInfoLog(shader, 1024, &mut log_len, v.as_mut_ptr().cast());
             v.set_len(log_len.try_into().unwrap());
             panic!(
                 "Erro na compilação do shader: {:?}",
@@ -54,19 +55,19 @@ pub unsafe fn compile_shader(gl: &GlFns, shader_type: GLenum) -> u32 {
     }
 }
 
-pub unsafe fn create_shader_program(gl: &GlFns, vertex_shader: u32, fragment_shader: u32) -> u32 {
+pub unsafe fn create_shader_program(vertex_shader: u32, fragment_shader: u32) -> u32 {
     unsafe {
-        let program = gl.CreateProgram();
-        gl.AttachShader(program, vertex_shader);
-        gl.AttachShader(program, fragment_shader);
-        gl.LinkProgram(program);
+        let program = glCreateProgram();
+        glAttachShader(program, vertex_shader);
+        glAttachShader(program, fragment_shader);
+        glLinkProgram(program);
 
         let mut success = 0;
-        gl.GetProgramiv(program, GL_LINK_STATUS, &mut success);
+        glGetProgramiv(program, GL_LINK_STATUS, &mut success);
         if success == 0 {
             let mut v: Vec<u8> = Vec::with_capacity(1024);
             let mut log_len = 0_i32;
-            gl.GetProgramInfoLog(program, 1024, &mut log_len, v.as_mut_ptr().cast());
+            glGetProgramInfoLog(program, 1024, &mut log_len, v.as_mut_ptr().cast());
             v.set_len(log_len.try_into().unwrap());
             panic!(
                 "Erro da linkagem dos shaders no programa: {}",
