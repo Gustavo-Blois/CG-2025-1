@@ -20,25 +20,23 @@ fn main() {
     window.make_current();
     window.set_key_polling(true);
 
-    // Carrega funções OpenGL
-    let gl = unsafe {
-        GlFns::load_from(&|p| {
-            glfw.get_proc_address_raw(&glfw::string_from_c_str(p as *const _)) as *const _
-        })
-        .unwrap()
-    };
+
 
     unsafe {
+        //carrega o opengl globalmente
+        load_global_gl(&|p| {
+            glfw.get_proc_address_raw(&glfw::string_from_c_str(p as *const _)) as *const _
+        });
         // Configuração de VAO e VBO
         let mut vao = 0;
-        gl.GenVertexArrays(1, &mut vao);
+        glGenVertexArrays(1, &mut vao);
         assert_ne!(vao, 0);
 
         let mut vbo = 0;
-        gl.GenBuffers(1, &mut vbo);
+        glGenBuffers(1, &mut vbo);
         assert_ne!(vbo, 0);
 
-        gl.BindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
         let miranha = cria_objeto(
             "/home/gundrjsse/projetos/rust/012025/CG-2025-1/objetos/spiderman/spiderman.obj"
@@ -46,7 +44,7 @@ fn main() {
         );
 
         //Enviando os vertices obtidos para o buffer;
-        gl.BufferData(
+        glBufferData(
             GL_ARRAY_BUFFER,
             (miranha.vertices.len() * std::mem::size_of::<[f32; 3]>()) as isize,
             miranha.vertices.as_ptr().cast(),
@@ -61,15 +59,15 @@ fn main() {
         let shader_program = create_shader_program(&gl, vertex_shader, fragment_shader);
 
         // Configuração dos atributos de vértice
-        gl.BindVertexArray(vao);
-        gl.UseProgram(shader_program);
+        glBindVertexArray(vao);
+        glUseProgram(shader_program);
 
-        let loc = gl.GetAttribLocation(
+        let loc = glGetAttribLocation(
             shader_program,
             CString::new("position").unwrap().as_ptr() as *const u8,
         );
-        gl.EnableVertexAttribArray(loc.try_into().unwrap());
-        gl.VertexAttribPointer(
+        glEnableVertexAttribArray(loc.try_into().unwrap());
+        glVertexAttribPointer(
             loc.try_into().unwrap(),
             3,
             GL_FLOAT,
@@ -79,24 +77,24 @@ fn main() {
         );
 
         // Limpeza dos shaders (não são mais necessários após a linkagem)
-        gl.DeleteShader(vertex_shader);
-        gl.DeleteShader(fragment_shader);
+        glDeleteShader(vertex_shader);
+        glDeleteShader(fragment_shader);
 
         // Configurações finais
         glfw.set_swap_interval(glfw::SwapInterval::Sync(1_u32));
-        gl.Enable(GL_DEPTH_TEST);
-        gl.ClearColor(0.749, 0.845, 1.0, 1.0);
+        glEnable(GL_DEPTH_TEST);
+        glClearColor(0.749, 0.845, 1.0, 1.0);
 
         // Loop principal
         let mut poligon_mode = 0;
         while !window.should_close() {
             if poligon_mode == 0 {
-                gl.PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             } else {
-                gl.PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             }
 
-            gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             // eventos
             for (_, event) in glfw::flush_messages(&events) {
                 if let glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) = event {
